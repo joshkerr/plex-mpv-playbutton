@@ -39,6 +39,10 @@ The extension injects a button into the Plex web interface that:
 3. Copies the command to your clipboard
 4. Marks the media as watched in Plex
 
+## Screenshots
+
+![screenshot](https://github.com/joshkerr/plex-mpv-playbutton/blob/main/screenshot.png)
+
 ## Contributing
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
