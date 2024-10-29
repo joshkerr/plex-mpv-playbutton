@@ -1,0 +1,13 @@
+#mpv-play-button {
+  background-color: #cc7b19;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin-left: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#mpv-play-button:hover {
+  background-color: #e88c1e;
+}

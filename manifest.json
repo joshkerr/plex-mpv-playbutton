@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Plex MPV Launcher",
+  "version": "1.0",
+  "description": "Adds a 'Play with MPV' button to Plex pages for movies and TV shows",
+  "permissions": ["activeTab", "clipboardWrite"],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://app.plex.tv/*",
+        "https://*.plex.tv/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
