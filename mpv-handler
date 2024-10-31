@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+
+import time
+import subprocess
+import re
+import pyperclip
+from urllib.parse import unquote
+from pynput import keyboard
+import threading
+import sys
+
+# Add global variable for controlling the main loop
+running = True
+
+def on_press(key):
+    """Handle keyboard input."""
+    global running
+    try:
+        if key.char == 'q':
+            print("\nQuitting MPV Handler...")
+            running = False
+            sys.exit(0)
+    except AttributeError:
+        pass
+
+def is_mpv_command(text):
+    """Check if the clipboard content is an MPV command."""
+    return text.strip().startswith('mpv "') and text.strip().endswith('"')
+
+def extract_url(command):
+    """Extract the URL from the MPV command."""
+    match = re.search(r'mpv "(.*?)"', command)
+    if match:
+        return unquote(match.group(1))
+    return None
+
+def play_with_mpv(url):
+    """Launch MPV with the given URL."""
+    try:
+        # Create a new process group and redirect output
+        subprocess.Popen(
+            ['mpv', url],
+            start_new_session=True,  # Detach the process
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        # Clear the clipboard after launching MPV
+        pyperclip.copy('')
+    except subprocess.CalledProcessError as e:
+        print(f"Error launching MPV: {e}")
+    except Exception as e:
+        print(f"Unexpected error launching MPV: {e}")
+
+def main():
+    print("MPV Handler started. Monitoring clipboard... (Press 'q' to quit)")
+    previous_clipboard = ''
+    
+    # Start keyboard listener in a separate thread
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
+    
+    while running:
+        try:
+            current_clipboard = pyperclip.paste()
+            
+            if current_clipboard != previous_clipboard:
+                if is_mpv_command(current_clipboard):
+                    url = extract_url(current_clipboard)
+                    if url:
+                        print(f"Playing: {url}")
+                        play_with_mpv(url)
+                
+                previous_clipboard = current_clipboard
+            
+            time.sleep(1)
+            
+        except Exception as e:
+            print(f"Error: {e}")
+            time.sleep(1)
+
+if __name__ == "__main__":
+    main()
