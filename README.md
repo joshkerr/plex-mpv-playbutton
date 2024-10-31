@@ -16,6 +16,7 @@ A browser extension that adds a native-looking MPV playback button to the Plex w
 2. Open Chrome/Firefox and navigate to extensions
 3. Enable Developer Mode
 4. Load unpacked extension and select the cloned directory
+5. Optional: launch the mpv-handler python script to monitor your clipboard for mpv links and then launch mpv with those links when they are detected. Once detected the handler will also remove the mpv link from your clipboard. The effect of this script is after clicking the mpv button, mpv will launch playing your content.
 
 ## Usage
 
