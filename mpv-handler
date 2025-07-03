@@ -5,23 +5,21 @@ import subprocess
 import re
 import pyperclip
 from urllib.parse import unquote
-from pynput import keyboard
-import threading
 import sys
+import select
+import termios
+import tty
 
 # Add global variable for controlling the main loop
 running = True
 
-def on_press(key):
-    """Handle keyboard input."""
-    global running
-    try:
-        if key.char == 'q':
-            print("\nQuitting MPV Handler...")
-            running = False
-            sys.exit(0)
-    except AttributeError:
-        pass
+def check_for_quit():
+    """Check if 'q' key was pressed without blocking."""
+    if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+        key = sys.stdin.read(1)
+        if key.lower() == 'q':
+            return True
+    return False
 
 def is_mpv_command(text):
     """Check if the clipboard content is an MPV command."""
@@ -55,28 +53,37 @@ def main():
     print("MPV Handler started. Monitoring clipboard... (Press 'q' to quit)")
     previous_clipboard = ''
     
-    # Start keyboard listener in a separate thread
-    listener = keyboard.Listener(on_press=on_press)
-    listener.start()
-    
-    while running:
-        try:
-            current_clipboard = pyperclip.paste()
-            
-            if current_clipboard != previous_clipboard:
-                if is_mpv_command(current_clipboard):
-                    url = extract_url(current_clipboard)
-                    if url:
-                        print(f"Playing: {url}")
-                        play_with_mpv(url)
+    # Set terminal to raw mode for non-blocking input
+    old_settings = termios.tcgetattr(sys.stdin)
+    try:
+        tty.setcbreak(sys.stdin.fileno())
+        
+        while running:
+            try:
+                # Check for quit command
+                if check_for_quit():
+                    print("\nQuitting MPV Handler...")
+                    break
                 
-                previous_clipboard = current_clipboard
-            
-            time.sleep(1)
-            
-        except Exception as e:
-            print(f"Error: {e}")
-            time.sleep(1)
+                current_clipboard = pyperclip.paste()
+                
+                if current_clipboard != previous_clipboard:
+                    if is_mpv_command(current_clipboard):
+                        url = extract_url(current_clipboard)
+                        if url:
+                            print(f"Playing: {url}")
+                            play_with_mpv(url)
+                    
+                    previous_clipboard = current_clipboard
+                
+                time.sleep(1)
+                
+            except Exception as e:
+                print(f"Error: {e}")
+                time.sleep(1)
+    finally:
+        # Restore terminal settings
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
 if __name__ == "__main__":
     main()
